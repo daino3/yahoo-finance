@@ -1,19 +1,9 @@
 require 'open-uri'
 require 'ostruct'
 require 'json'
+require 'csv'
 
-if RUBY_VERSION >= "1.9"
-  require 'csv'
-else
-  require 'rubygems'
-  require 'fastercsv'
-  class Object
-    CSV = FCSV
-    alias_method :CSV, :FCSV
-  end
-end
-
- class YahooFinance
+class YahooFinance
   
    VERSION = '0.1.0'
 
@@ -119,7 +109,7 @@ end
   # retrieve the quote data (an OpenStruct per quote)
   # the options param can be used to specify the following attributes:
   # :raw - if true, each column will be converted (to numbers, dates, etc)
-  def self.quotes(symbols_array, columns_array = [:symbol, :last_trade_price, :last_trade_date, :change, :previous_close], options = { })
+  def self.quotes(symbols_array, columns_array = COLUMNS, options = { })
     options[:raw] ||= true
     ret = []
     symbols_array.each_slice(SYMBOLS_PER_REQUEST) do |symbols|
@@ -149,31 +139,35 @@ end
   private
   
   def self.read_quotes(symb_str, cols)
-     columns = "#{cols.map {|col| COLUMNS[col] }.join('')}"
-     conn = open("http://download.finance.yahoo.com/d/quotes.csv?s=#{URI.escape(symb_str)}&f=#{columns}")
-     CSV.parse(conn.read, :headers => cols)
+    columns = "#{cols.map {|col| COLUMNS[col] }.join('')}"
+    conn = open("http://download.finance.yahoo.com/d/quotes.csv?s=#{URI.escape(symb_str)}&f=#{columns}")
+    #TODO: FIX
+    binding.pry
+    CSV.parse(conn.read, :headers => cols)
   end
 
   def self.read_historical(symbol, start_date, end_date, options)
-     url = "http://ichart.finance.yahoo.com/table.csv?s=#{URI.escape(symbol)}&d=#{end_date.month-1}&e=#{end_date.day}&f=#{end_date.year}&g=#{HISTORICAL_MODES[options[:period]]}&a=#{start_date.month-1}&b=#{start_date.day}&c=#{start_date.year}&ignore=.csv"
-     conn = open(url)
-     cols =
-       if options[:period] == :dividends_only
-         [:dividend_pay_date, :dividend_yield]
-       else
-         [:trade_date, :open, :high, :low, :close, :volume, :adjusted_close]
-       end
-     result = CSV.parse(conn.read, :headers => cols) #:first_row, :header_converters => :symbol)
-     result.delete(0)  # drop returned header
-     result
+    url = "http://ichart.finance.yahoo.com/table.csv?s=#{URI.escape(symbol)}&d=#{end_date.month-1}&e=#{end_date.day}&f=#{end_date.year}&g=#{HISTORICAL_MODES[options[:period]]}&a=#{start_date.month-1}&b=#{start_date.day}&c=#{start_date.year}&ignore=.csv"
+    conn = open(url)
+    cols =
+      if options[:period] == :dividends_only
+        [:dividend_pay_date, :dividend_yield]
+      else
+        [:trade_date, :open, :high, :low, :close, :volume, :adjusted_close]
+      end
+    # TODO: FIX
+    binding.pry
+    result = CSV.parse(conn.read, :headers => cols) #:first_row, :header_converters => :symbol)
+    result.delete(0)  # drop returned header
+    result
   end
 
   def self.read_symbols(query)
-     conn = open("http://d.yimg.com/autoc.finance.yahoo.com/autoc?query=#{query}&callback=YAHOO.Finance.SymbolSuggest.ssCallback")
-     result = conn.read
-     result.sub!('YAHOO.Finance.SymbolSuggest.ssCallback(', '').chomp!(')')
-     json_result = JSON.parse(result)
-     json_result["ResultSet"]["Result"]
+    conn = open("http://d.yimg.com/autoc.finance.yahoo.com/autoc?query=#{query}&callback=YAHOO.Finance.SymbolSuggest.ssCallback")
+    result = conn.read
+    result.sub!('YAHOO.Finance.SymbolSuggest.ssCallback(', '').chomp!(')')
+    json_result = JSON.parse(result)
+    json_result["ResultSet"]["Result"]
   end
 
  end

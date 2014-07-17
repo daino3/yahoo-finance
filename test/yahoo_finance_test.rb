@@ -38,7 +38,7 @@ class TestYahoo_finance_test < Test::Unit::TestCase
   
   def test_recognizes_csv_strings
     quotes = YahooFinance.quotes(["GOOG"], [:name])
-    assert_no_match /^\"/, quotes.first.name
+    assert_no_match Regexp.new("^\""), quotes.first.name
   end
 
   def test_symbols
