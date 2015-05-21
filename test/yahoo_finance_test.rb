@@ -1,5 +1,6 @@
 #!/usr/bin/ruby
 require 'test/unit'
+require 'pry'
 require File.join(File.dirname(__FILE__),'../lib/yahoo_finance')
 
 class TestYahoo_finance_test < Test::Unit::TestCase

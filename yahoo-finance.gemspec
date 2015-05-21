@@ -9,6 +9,7 @@ spec = Gem::Specification.new do |s|
   s.homepage = "http://hervalicio.us/blog"
   s.summary = "A wrapper to Yahoo! Finance market data (quotes and exchange rates) feed"
   s.files = ["lib/yahoo_finance.rb", "lib/yahoo-finance.rb"]
+  s.add_development_dependency("pry")
   s.require_path = "lib"
   s.has_rdoc = false
   s.extra_rdoc_files = ["README.md", "HISTORY"]
